@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}创建岗位{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 class="card-title">创建新岗位</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="title">岗位名称 *</label>
+                <input type="text" id="title" name="title" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="company">公司名称 *</label>
+                <input type="text" id="company" name="company" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="department">部门</label>
+                <input type="text" id="department" name="department" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="location">工作地点 *</label>
+                <input type="text" id="location" name="location" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="education_required">学历要求 *</label>
+                <select id="education_required" name="education_required" class="form-control" required>
+                    <option value="">请选择</option>
+                    <option value="不限">不限</option>
+                    <option value="大专">大专</option>
+                    <option value="本科">本科</option>
+                    <option value="硕士">硕士</option>
+                    <option value="博士">博士</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="work_years_required">工作年限要求（年）*</label>
+                <input type="number" id="work_years_required" name="work_years_required" class="form-control" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label>薪资范围（k/月）</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" name="salary_min" class="form-control" placeholder="最低" min="0">
+                    <span>-</span>
+                    <input type="number" name="salary_max" class="form-control" placeholder="最高" min="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="skills_required">技能要求（用逗号分隔）*</label>
+            <input type="text" id="skills_required" name="skills_required" class="form-control" placeholder="例如：Python, Django, MySQL" required>
+        </div>
+
+        <div class="form-group">
+            <label for="job_description">岗位描述 *</label>
+            <textarea id="job_description" name="job_description" class="form-control" rows="5" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="job_requirements">任职要求 *</label>
+            <textarea id="job_requirements" name="job_requirements" class="form-control" rows="5" required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary">创建岗位</button>
+            <a href="{% url 'job_list' %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}个人中心{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 class="card-title">个人中心</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_resumes }}</div>
+            <div class="stat-label">上传简历数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ parsed_resumes }}</div>
+            <div class="stat-label">已解析简历</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ matched_jobs_count }}</div>
+            <div class="stat-label">匹配岗位数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_applications }}</div>
+            <div class="stat-label">已投递岗位</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">快速操作</h2>
+    <div style="display: flex; gap: 15px;">
+        <a href="{% url 'upload_resume' %}" class="btn btn-primary">📤 上传新简历</a>
+        <a href="{% url 'resume_list' %}" class="btn btn-secondary">📋 查看我的简历</a>
+        <a href="{% url 'matched_jobs' %}" class="btn btn-secondary">🎯 智能匹配岗位</a>
+        <a href="{% url 'my_applications' %}" class="btn btn-secondary">📮 我的投递</a>
+    </div>
+</div>
+
+{% if recommended_jobs %}
+<div class="card">
+    <h2 class="card-title">🎯 为您推荐的岗位</h2>
+    <p style="color: #666; margin-bottom: 20px;">基于您的简历智能匹配，按匹配度从高到低排序</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>岗位名称</th>
+                <th>公司</th>
+                <th>地点</th>
+                <th>薪资</th>
+                <th>匹配度</th>
+                <th>简历</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in recommended_jobs %}
+            <tr>
+                <td><strong>{{ match.job.title }}</strong></td>
+                <td>{% if match.job.company %}{{ match.job.company }}{% else %}-{% endif %}</td>
+                <td>{{ match.job.location }}</td>
+                <td>
+                    {% if match.job.salary_min and match.job.salary_max %}
+                        {{ match.job.salary_min }}-{{ match.job.salary_max }}k
+                    {% else %}
+                        面议
+                    {% endif %}
+                </td>
+                <td>
+                    <strong style="color: {% if match.match_score >= 80 %}#28a745{% elif match.match_score >= 60 %}#ffc107{% else %}#dc3545{% endif %}; font-size: 16px;">
+                        {{ match.match_score|floatformat:0 }}分
+                    </strong>
+                </td>
+                <td style="font-size: 12px; color: #666;">{{ match.resume.name|default:match.resume.file_name }}</td>
+                <td>
+                    <a href="{% url 'job_detail' match.job.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">查看详情</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'matched_jobs' %}" class="btn btn-primary" style="margin-top: 10px;">查看全部匹配岗位 →</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2 class="card-title">最新简历</h2>
+    {% if recent_resumes %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>文件名</th>
+                <th>状态</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resume in recent_resumes %}
+            <tr>
+                <td>{{ resume.file_name }}</td>
+                <td>
+                    {% if resume.status == 'parsed' %}
+                        <span class="badge badge-success">已解析</span>
+                    {% elif resume.status == 'pending' %}
+                        <span class="badge badge-warning">待解析</span>
+                    {% else %}
+                        <span class="badge badge-danger">解析失败</span>
+                    {% endif %}
+                </td>
+                <td>{{ resume.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'resume_detail' resume.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">查看</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 30px 0;">暂无简历</p>
+    {% endif %}
+</div>
+{% endblock %}
+

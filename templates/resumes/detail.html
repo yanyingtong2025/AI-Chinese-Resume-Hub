@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}简历详情{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 class="card-title" style="margin-bottom: 0;">📄 简历详情</h1>
+        <div style="display: flex; gap: 10px;">
+            {% if user.user_type == 'jobseeker' and resume.user == user %}
+            <a href="{% url 'edit_resume' resume.id %}" class="btn-modern btn-modern-warning">✏️ 编辑简历</a>
+            <button onclick="optimizeResume()" class="btn-modern btn-modern-success">✨ 生成优化建议</button>
+            {% endif %}
+            <a href="{% url 'resume_list' %}" class="btn-modern btn-modern-secondary">← 返回列表</a>
+        </div>
+    </div>
+
+    <!-- 评分卡片 -->
+    {% if resume.score %}
+    <div class="score-comparison-card" id="score-card">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 24px; margin: 0;">🎯 简历评分</h2>
+        </div>
+        <div style="text-align: center;">
+            <div class="score-item-value">{{ resume.score }}</div>
+            <div style="font-size: 18px; margin-top: 8px; opacity: 0.95;">总分</div>
+        </div>
+
+        {% if resume.score_details %}
+        <div style="margin-top: 24px; padding: 20px; background: rgba(255, 255, 255, 0.15); border-radius: 12px;">
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">📊 评分详情</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                {% for key, value in resume.score_details.items %}
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 12px; border-radius: 8px;">
+                    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 4px;">{{ key }}</div>
+                    <div style="font-size: 20px; font-weight: 700;">{{ value }}分</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if '优化版' in resume.file_name %}
+        <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; text-align: center;">
+            <span style="font-size: 18px; font-weight: 600;">✨ 这是优化后的简历</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div>
+            <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">📋 基本信息</h3>
+            <table style="width: 100%;">
+                <tr><td style="padding: 8px; color: #666;">姓名：</td><td style="padding: 8px;"><strong>{{ resume.name|default:"未填写" }}</strong></td></tr>
+                <tr><td style="padding: 8px; color: #666;">性别：</td><td style="padding: 8px;">{{ resume.gender|default:"-" }}</td></tr>
+                <tr><td style="padding: 8px; color: #666;">年龄：</td><td style="padding: 8px;">{{ resume.age|default:"-" }}</td></tr>
+                <tr><td style="padding: 8px; color: #666;">电话：</td><td style="padding: 8px;">{{ resume.phone|default:"-" }}</td></tr>
+                <tr><td style="padding: 8px; color: #666;">邮箱：</td><td style="padding: 8px;">{{ resume.email|default:"-" }}</td></tr>
+            </table>
+        </div>
+        <div>
+            <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">🎓 教育背景</h3>
+            <table style="width: 100%;">
+                <tr><td style="padding: 8px; color: #666;">学历：</td><td style="padding: 8px;"><strong>{{ resume.education|default:"-" }}</strong></td></tr>
+                <tr><td style="padding: 8px; color: #666;">毕业院校：</td><td style="padding: 8px;">{{ resume.school|default:"-" }}</td></tr>
+                <tr><td style="padding: 8px; color: #666;">专业：</td><td style="padding: 8px;">{{ resume.major|default:"-" }}</td></tr>
+                <tr><td style="padding: 8px; color: #666;">工作年限：</td><td style="padding: 8px;">{{ resume.work_years|default:"-" }}年</td></tr>
+            </table>
+        </div>
+    </div>
+
+    {% if resume.parsed_data %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">💼 工作经历</h3>
+        {% if resume.parsed_data.work_experience %}
+            {% for exp in resume.parsed_data.work_experience %}
+            <div style="padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 12px; border: 1px solid #f0f0f0;">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size: 15px;">{{ exp.company }} - {{ exp.position }}</div>
+                <div style="color: rgba(0,0,0,0.65); font-size: 14px; margin-bottom: 8px;">{{ exp.duration }}</div>
+                <div style="color: rgba(0,0,0,0.85); line-height: 1.7;">{{ exp.description }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #999;">暂无工作经历</p>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">🚀 项目经验</h3>
+        {% if resume.parsed_data.projects %}
+            {% for project in resume.parsed_data.projects %}
+            <div style="padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 12px; border: 1px solid #f0f0f0;">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size: 15px;">{{ project.name }}</div>
+                <div style="color: rgba(0,0,0,0.85); margin-bottom: 8px;">{{ project.description }}</div>
+                <div style="color: rgba(0,0,0,0.65); font-size: 14px; margin-bottom: 6px;">技术栈：{{ project.technologies }}</div>
+                <div style="color: rgba(0,0,0,0.65); font-size: 14px;">职责：{{ project.role }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #999;">暂无项目经验</p>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">🛠️ 技能特长</h3>
+        {% if resume.parsed_data.skills %}
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% for skill in resume.parsed_data.skills %}
+                <span class="badge badge-info" style="padding: 8px 15px; font-size: 14px;">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #999;">暂无技能信息</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if resume.optimization_suggestions %}
+    <div id="suggestions-area">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">💡 优化建议</h3>
+        <div style="padding: 20px; background: #fffbe6; border-radius: 8px; white-space: pre-wrap; line-height: 1.8; border: 1px solid #ffe58f;">{{ resume.optimization_suggestions }}</div>
+
+        {% if user.user_type == 'jobseeker' and resume.user == user %}
+        <div style="margin-top: 20px; padding: 20px; background: #e6f7ff; border-radius: 8px; border: 1px solid #91d5ff; text-align: center;">
+            <div style="font-size: 16px; color: #0050b3; margin-bottom: 12px; font-weight: 500;">
+                💫 根据以上建议，是否生成优化后的简历？
+            </div>
+            <div style="color: #666; font-size: 14px; margin-bottom: 16px;">
+                系统将基于AI建议重新生成一份优化后的简历，并保存为新简历记录
+            </div>
+            <button onclick="generateOptimizedResume()" class="btn-modern btn-modern-primary btn-modern-lg">
+                ✨ 确认生成优化简历
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div id="loading-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🤖</div>
+        <div style="font-size: 18px; color: #333;">AI正在分析简历...</div>
+        <div style="color: #666; margin-top: 10px;">请稍候</div>
+    </div>
+</div>
+
+<script>
+function optimizeResume() {
+    const modal = document.getElementById('loading-modal');
+    modal.style.display = 'flex';
+
+    fetch('{% url "optimize_resume" resume.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.style.display = 'none';
+        if (data.suggestions) {
+            // 创建或更新建议区域
+            let suggestionsArea = document.getElementById('suggestions-area');
+            if (!suggestionsArea) {
+                suggestionsArea = document.createElement('div');
+                suggestionsArea.id = 'suggestions-area';
+                document.querySelector('.card').appendChild(suggestionsArea);
+            }
+            suggestionsArea.innerHTML = `
+                <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">💡 优化建议</h3>
+                <div style="padding: 20px; background: #fffbe6; border-radius: 8px; white-space: pre-wrap; line-height: 1.8; border: 1px solid #ffe58f;">${data.suggestions}</div>
+
+                <div style="margin-top: 20px; padding: 20px; background: #e6f7ff; border-radius: 8px; border: 1px solid #91d5ff; text-align: center;">
+                    <div style="font-size: 16px; color: #0050b3; margin-bottom: 12px; font-weight: 500;">
+                        💫 根据以上建议，是否生成优化后的简历？
+                    </div>
+                    <div style="color: #666; font-size: 14px; margin-bottom: 16px;">
+                        系统将基于AI建议重新生成一份优化后的简历，并保存为新简历记录
+                    </div>
+                    <button onclick="generateOptimizedResume()" class="btn-modern btn-modern-primary btn-modern-lg">
+                        ✨ 确认生成优化简历
+                    </button>
+                </div>
+            `;
+            suggestionsArea.scrollIntoView({ behavior: 'smooth' });
+        }
+    })
+    .catch(error => {
+        modal.style.display = 'none';
+        alert('生成失败，请重试');
+        console.error('Error:', error);
+    });
+}
+
+function generateOptimizedResume() {
+    if (!confirm('确认生成优化后的简历吗？\n\n这将创建一份新的简历记录，原简历保持不变。')) {
+        return;
+    }
+
+    const modal = document.getElementById('loading-modal');
+    const modalText = modal.querySelector('div > div:nth-child(2)');
+    modalText.textContent = 'AI正在生成优化简历...';
+    modal.style.display = 'flex';
+
+    fetch('{% url "generate_optimized_resume" resume.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.style.display = 'none';
+        if (data.success) {
+            // 显示成功提示并跳转
+            const successModal = document.createElement('div');
+            successModal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+            successModal.innerHTML = `
+                <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; max-width: 500px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+                    <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">优化简历生成成功！</h2>
+                    <p style="color: #666; font-size: 16px; margin-bottom: 24px;">已保存到您的简历列表中，即将为您跳转...</p>
+                    <div style="font-size: 14px; color: #999;">2秒后自动跳转</div>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+
+            setTimeout(() => {
+                window.location.href = '/resumes/detail/' + data.new_resume_id + '/';
+            }, 2000);
+        } else {
+            alert('生成失败：' + (data.error || '未知错误'));
+        }
+    })
+    .catch(error => {
+        modal.style.display = 'none';
+        alert('生成失败，请重试');
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}HR控制台{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 class="card-title">HR控制台</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_jobs }}</div>
+            <div class="stat-label">总岗位数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ active_jobs }}</div>
+            <div class="stat-label">活跃岗位</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_applications }}</div>
+            <div class="stat-label">收到投递</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ pending_applications }}</div>
+            <div class="stat-label">待查看投递</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">快速操作</h2>
+    <div style="display: flex; gap: 15px;">
+        <a href="{% url 'create_job' %}" class="btn btn-primary">➕ 创建新岗位</a>
+        <a href="{% url 'job_list' %}" class="btn btn-secondary">📋 查看所有岗位</a>
+    </div>
+</div>
+
+{% if recent_applications %}
+<div class="card">
+    <h2 class="card-title">📮 最新投递</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>求职者</th>
+                <th>投递岗位</th>
+                <th>简历</th>
+                <th>状态</th>
+                <th>投递时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in recent_applications %}
+            <tr>
+                <td><strong>{{ app.jobseeker.username }}</strong></td>
+                <td>{{ app.job.title }}</td>
+                <td>{{ app.resume.name|default:app.resume.file_name }}</td>
+                <td>
+                    {% if app.status == 'pending' %}
+                        <span class="badge badge-warning">待查看</span>
+                    {% elif app.status == 'viewed' %}
+                        <span class="badge badge-info">已查看</span>
+                    {% elif app.status == 'interested' %}
+                        <span class="badge badge-success">感兴趣</span>
+                    {% elif app.status == 'interview' %}
+                        <span class="badge badge-success">邀请面试</span>
+                    {% elif app.status == 'accepted' %}
+                        <span class="badge badge-success">已录用</span>
+                    {% else %}
+                        <span class="badge badge-danger">不合适</span>
+                    {% endif %}
+                </td>
+                <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'job_applications' app.job.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">查看详情</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2 class="card-title">最新岗位</h2>
+    {% if recent_jobs %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>岗位名称</th>
+                <th>部门</th>
+                <th>地点</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in recent_jobs %}
+            <tr>
+                <td>{{ job.title }}</td>
+                <td>{{ job.department }}</td>
+                <td>{{ job.location }}</td>
+                <td>
+                    {% if job.is_active %}
+                        <span class="badge badge-success">启用</span>
+                    {% else %}
+                        <span class="badge badge-warning">禁用</span>
+                    {% endif %}
+                </td>
+                <td>{{ job.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'job_detail' job.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">查看</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #999; padding: 30px 0;">暂无岗位</p>
+    {% endif %}
+</div>
+{% endblock %}
+

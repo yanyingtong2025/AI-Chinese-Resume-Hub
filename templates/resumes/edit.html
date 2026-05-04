@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}编辑简历{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 class="card-title" style="margin-bottom: 0;">✏️ 编辑简历</h1>
+        <a href="{% url 'resume_detail' resume.id %}" class="btn-modern btn-modern-secondary">← 返回详情</a>
+    </div>
+
+    <div style="background: #f0f5ff; padding: 20px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid #1890ff;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">💡</span>
+            <div>
+                <div style="font-weight: 600; color: #0050b3; margin-bottom: 4px;">编辑提示</div>
+                <div style="color: #666; font-size: 14px;">编辑后系统会重新计算简历评分，帮助您了解简历质量变化</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" style="max-width: 800px;">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.name.label }}
+                    <span style="color: #f5222d;">*</span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.gender.label }}
+                </label>
+                {{ form.gender }}
+                {% if form.gender.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.gender.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.age.label }}
+                </label>
+                {{ form.age }}
+                {% if form.age.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.age.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.phone.label }}
+                </label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.phone.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                {{ form.email.label }}
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.education.label }}
+                </label>
+                {{ form.education }}
+                {% if form.education.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.education.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.school.label }}
+                </label>
+                {{ form.school }}
+                {% if form.school.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.school.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.major.label }}
+                </label>
+                {{ form.major }}
+                {% if form.major.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.major.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    {{ form.work_years.label }}
+                </label>
+                {{ form.work_years }}
+                {% if form.work_years.errors %}
+                    <div style="color: #f5222d; font-size: 12px; margin-top: 4px;">{{ form.work_years.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+            <button type="submit" class="btn-modern btn-modern-primary btn-modern-lg">
+                💾 保存修改
+            </button>
+            <a href="{% url 'resume_detail' resume.id %}" class="btn-modern btn-modern-secondary btn-modern-lg">
+                ✖️ 取消
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.form-control:hover {
+    border-color: #40a9ff;
+}
+</style>
+{% endblock %}
+

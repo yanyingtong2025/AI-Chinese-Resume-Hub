@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}智能匹配岗位{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+        <h1 class="card-title" style="margin-bottom: 12px;">智能匹配岗位</h1>
+        <p style="color: #666; font-size: 16px; margin-bottom: 12px;">基于您的简历，为您推荐最合适的岗位</p>
+        <div style="display: inline-flex; gap: 10px; align-items: center; margin-top: 8px;">
+            <span style="display: inline-flex; align-items: center; padding: 6px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                <span style="margin-right: 6px;">🤖</span>
+                DeepSeek AI 智能分析
+            </span>
+            <span style="display: inline-flex; align-items: center; padding: 6px 16px; background: #f0f5ff; color: #1890ff; border-radius: 20px; font-size: 13px; border: 1px solid #d6e4ff;">
+                <span style="margin-right: 6px;">✓</span>
+                实时精准匹配
+            </span>
+        </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div style="background: #f6f8fa; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+        <form method="get" style="display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #24292f;">选择简历</label>
+                <select name="resume_id" class="form-control">
+                    <option value="">全部简历</option>
+                    {% for resume in user_resumes %}
+                    <option value="{{ resume.id }}" {% if selected_resume_id == resume.id|stringformat:"s" %}selected{% endif %}>
+                        {{ resume.name|default:resume.file_name }} (评分: {{ resume.score|floatformat:0 }}分)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; color: #24292f;">最低匹配度</label>
+                <select name="min_score" class="form-control">
+                    <option value="0" {% if min_score == 0 %}selected{% endif %}>不限</option>
+                    <option value="40" {% if min_score == 40 %}selected{% endif %}>40分以上</option>
+                    <option value="60" {% if min_score == 60 %}selected{% endif %}>60分以上</option>
+                    <option value="80" {% if min_score == 80 %}selected{% endif %}>80分以上</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-modern btn-modern-primary" style="height: 38px; padding: 0 24px;">
+                🔍 筛选
+            </button>
+        </form>
+    </div>
+
+    <!-- 统计数据 -->
+    <div class="stats-grid" style="margin-bottom: 24px;">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">匹配岗位</div>
+        </div>
+        <div class="stat-card" style="border-left: 3px solid #2da44e;">
+            <div class="stat-number" style="color: #2da44e;">{{ stats.excellent }}</div>
+            <div class="stat-label">高匹配(≥80分)</div>
+        </div>
+        <div class="stat-card" style="border-left: 3px solid #0969da;">
+            <div class="stat-number" style="color: #0969da;">{{ stats.good }}</div>
+            <div class="stat-label">中匹配(60-79分)</div>
+        </div>
+        <div class="stat-card" style="border-left: 3px solid #9a6700;">
+            <div class="stat-number" style="color: #9a6700;">{{ stats.fair }}</div>
+            <div class="stat-label">低匹配(<60分)</div>
+        </div>
+    </div>
+
+    {% if matches %}
+    <div style="display: grid; gap: 20px;">
+        {% for match in matches %}
+        <div class="match-card" style="border: 1px solid #d0d7de; border-radius: 8px; padding: 24px; background: #ffffff; transition: all 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <h3 style="font-size: 20px; font-weight: 600; margin: 0;">
+                            <a href="{% url 'job_detail' match.job.id %}" style="color: #0969da; text-decoration: none;">
+                                {{ match.job.title }}
+                            </a>
+                        </h3>
+                        {% if match.match_score >= 80 %}
+                            <span style="background: #dafbe1; color: #0f5323; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">高度匹配</span>
+                        {% elif match.match_score >= 60 %}
+                            <span style="background: #ddf4ff; color: #0550ae; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">较为匹配</span>
+                        {% else %}
+                            <span style="background: #fff8c5; color: #6f4400; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">一般匹配</span>
+                        {% endif %}
+                    </div>
+
+                    <div style="color: #57606a; font-size: 14px; margin-bottom: 8px;">
+                        🏢 {{ match.job.company|default:"公司名称保密" }} | 📍 {{ match.job.location }}
+                    </div>
+
+                    <div style="color: #57606a; font-size: 14px; margin-bottom: 8px;">
+                        💰
+                        {% if match.job.salary_min and match.job.salary_max %}
+                            {{ match.job.salary_min }}-{{ match.job.salary_max }}k/月
+                        {% else %}
+                            薪资面议
+                        {% endif %}
+                        | 🎓 {{ match.job.education_required }} | 📅 {{ match.job.work_years_required }}年经验
+                    </div>
+
+                    <div style="color: #57606a; font-size: 13px;">
+                        发布人：{{ match.job.hr_user.username }}
+                    </div>
+                </div>
+
+                <div style="text-align: center; min-width: 100px;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: {% if match.match_score >= 80 %}linear-gradient(135deg, #2da44e 0%, #0f5323 100%){% elif match.match_score >= 60 %}linear-gradient(135deg, #0969da 0%, #0550ae 100%){% else %}linear-gradient(135deg, #bf8700 0%, #6f4400 100%){% endif %}; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; margin: 0 auto 8px;">
+                        {{ match.match_score|floatformat:0 }}
+                    </div>
+                    <div style="font-size: 12px; color: #57606a; font-weight: 500;">匹配度</div>
+                </div>
+            </div>
+
+            <!-- 匹配详情 -->
+            <div style="background: #f6f8fa; padding: 16px; border-radius: 6px; margin-bottom: 16px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #24292f;">📊 匹配详情</div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 12px; color: #57606a; margin-bottom: 4px;">学历匹配</div>
+                        <div style="background: #e5e5e5; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #2da44e; height: 100%; width: {{ match.education_score }}%;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #24292f; font-weight: 600; margin-top: 4px;">{{ match.education_score|floatformat:0 }}分</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #57606a; margin-bottom: 4px;">经验匹配</div>
+                        <div style="background: #e5e5e5; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #0969da; height: 100%; width: {{ match.experience_score }}%;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #24292f; font-weight: 600; margin-top: 4px;">{{ match.experience_score|floatformat:0 }}分</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #57606a; margin-bottom: 4px;">技能匹配</div>
+                        <div style="background: #e5e5e5; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: #bf8700; height: 100%; width: {{ match.skills_score }}%;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #24292f; font-weight: 600; margin-top: 4px;">{{ match.skills_score|floatformat:0 }}分</div>
+                    </div>
+                </div>
+
+                {% if match.match_analysis %}
+                <div style="font-size: 13px; color: #57606a; line-height: 1.6; border-top: 1px solid #d0d7de; padding-top: 12px;">
+                    {{ match.match_analysis }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 操作按钮 -->
+            <div style="display: flex; gap: 12px;">
+                <a href="{% url 'job_detail' match.job.id %}" class="btn-modern btn-modern-primary" style="flex: 1; text-align: center; text-decoration: none;">
+                    查看岗位详情
+                </a>
+                <button onclick="applyJob({{ match.job.id }}, {{ match.resume.id }})" class="btn-modern btn-modern-secondary" style="flex: 1;">
+                    投递简历
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 80px 0; color: #57606a;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+        <p style="font-size: 18px; margin-bottom: 12px; font-weight: 600;">暂无匹配岗位</p>
+        {% if not user_resumes %}
+        <p style="font-size: 14px; margin-bottom: 24px;">请先上传简历，系统将自动为您匹配合适的岗位</p>
+        <a href="{% url 'upload_resume' %}" class="btn-modern btn-modern-primary">
+            📤 上传简历
+        </a>
+        {% else %}
+        <p style="font-size: 14px; margin-bottom: 24px;">当前没有符合条件的岗位，请调整筛选条件</p>
+        <a href="{% url 'matched_jobs' %}" class="btn-modern btn-modern-primary">
+            查看全部
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function applyJob(jobId, resumeId) {
+    if (!confirm('确定要投递这份简历吗？')) {
+        return;
+    }
+
+    fetch('{% url "apply_job" 0 %}'.replace('0', jobId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'resume_id=' + resumeId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+        } else {
+            alert('❌ ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('投递失败，请重试');
+        console.error('Error:', error);
+    });
+}
+
+// 鼠标悬停效果
+document.querySelectorAll('.match-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        this.style.transform = 'translateY(-2px)';
+    });
+
+    card.addEventListener('mouseleave', function() {
+        this.style.boxShadow = 'none';
+        this.style.transform = 'translateY(0)';
+    });
+});
+</script>
+{% endblock %}

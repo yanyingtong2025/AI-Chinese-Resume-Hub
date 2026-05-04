@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}上传简历{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📤</div>
+        <h1 class="card-title" style="margin-bottom: 8px;">上传简历</h1>
+        <p style="color: #666; font-size: 16px;">上传您的简历，AI将为您解析并打分</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" style="max-width: 600px; margin: 0 auto;" id="uploadForm" onsubmit="handleUpload(event)">
+        {% csrf_token %}
+        <div class="file-upload-area" id="upload-area" onclick="document.getElementById('resume_file').click()">
+            <div style="font-size: 48px; margin-bottom: 16px; color: #1890ff;">📄</div>
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #333;">点击或拖拽文件到此处上传</div>
+            <div style="color: #999; font-size: 14px;">支持 PDF、Word 格式，文件大小不超过10MB</div>
+            <input type="file" id="resume_file" name="resume_file" style="display: none;" accept=".pdf,.doc,.docx" onchange="updateFileName()">
+            <div id="file-name" style="margin-top: 16px; color: #52c41a; font-weight: 600; display: none;"></div>
+        </div>
+
+        <!-- 进度提示区域 -->
+        <div id="progress-area" style="margin-top: 20px; display: none;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; color: white;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div class="loading-spinner"></div>
+                    <div style="font-size: 16px; font-weight: 600;" id="progress-text">正在上传...</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div id="progress-bar" style="background: white; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+                <div style="margin-top: 12px; font-size: 13px; opacity: 0.9;" id="progress-detail">准备上传文件...</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; margin-top: 32px;" id="button-area">
+            <button type="submit" class="btn-modern btn-modern-primary btn-modern-lg" style="flex: 1;" id="submit-btn">
+                🚀 上传并解析
+            </button>
+            <a href="{% url 'resume_list' %}" class="btn-modern btn-modern-secondary btn-modern-lg" style="flex: 1; text-align: center; text-decoration: none;">
+                ← 返回列表
+            </a>
+        </div>
+    </form>
+
+    <div style="max-width: 600px; margin: 40px auto 0;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>🎯</span>
+                <span>智能评分系统</span>
+            </h3>
+            <div style="color: rgba(255,255,255,0.95); line-height: 1.8;">
+                <p style="margin-bottom: 12px;">上传后，AI将从以下6个维度对简历进行综合评分：</p>
+                <ul style="padding-left: 20px; margin: 0;">
+                    <li>基本信息完整度 (20分)</li>
+                    <li>工作经历质量 (25分)</li>
+                    <li>项目经验 (20分)</li>
+                    <li>技能特长 (15分)</li>
+                    <li>内容丰富度 (10分)</li>
+                    <li>教育背景 (10分)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="background: #f0f5ff; padding: 24px; border-radius: 12px; border: 1px solid #d6e4ff;">
+            <h3 style="font-size: 18px; margin-bottom: 15px; color: #1890ff; display: flex; align-items: center; gap: 8px;">
+                <span>💡</span>
+                <span>使用说明</span>
+            </h3>
+            <ul style="line-height: 2; color: #666; margin: 0; padding-left: 20px;">
+                <li>上传后系统将自动使用AI解析简历内容并进行打分</li>
+                <li>解析完成后可查看详细的评分和结构化信息</li>
+                <li>可以生成针对性的优化建议提升简历质量</li>
+                <li>优化后可以生成新版简历并对比评分变化</li>
+                <li>推荐使用PDF格式以获得最佳解析效果</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.file-upload-area.dragging {
+    background: #f0f5ff;
+    border-color: #1890ff;
+}
+</style>
+
+<script>
+function updateFileName() {
+    const input = document.getElementById('resume_file');
+    const fileNameDiv = document.getElementById('file-name');
+    if (input.files.length > 0) {
+        fileNameDiv.textContent = '✓ 已选择: ' + input.files[0].name;
+        fileNameDiv.style.display = 'block';
+    }
+}
+
+// 全局变量
+let progressInterval = null;
+
+// 处理表单提交
+function handleUpload(event) {
+    event.preventDefault();
+
+    const input = document.getElementById('resume_file');
+    if (!input.files || input.files.length === 0) {
+        alert('请选择要上传的简历文件！');
+        return false;
+    }
+
+    const file = input.files[0];
+    console.log('开始上传文件:', file.name, '大小:', file.size);
+
+    // 显示进度区域，隐藏上传区域
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('progress-area').style.display = 'block';
+    document.getElementById('submit-btn').disabled = true;
+
+    // 更新初始进度
+    updateProgress(5, '准备上传...', '文件: ' + file.name + ' (' + formatFileSize(file.size) + ')');
+
+    // 构建FormData
+    const formData = new FormData(document.getElementById('uploadForm'));
+    console.log('FormData已构建');
+
+    // 使用 XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+
+    // 上传进度监听
+    xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 20) + 10; // 10-30%
+            updateProgress(percent, '正在上传文件...', `${formatFileSize(e.loaded)} / ${formatFileSize(e.total)}`);
+            console.log('上传进度:', percent + '%');
+        }
+    });
+
+    // 开始加载响应
+    xhr.addEventListener('loadstart', () => {
+        console.log('请求已发送，等待服务器响应...');
+        updateProgress(30, '文件上传完成', '后端正在处理...');
+
+        // 启动进度动画（模拟后端处理进度）
+        startProgressAnimation();
+    });
+
+    // 进度动画函数
+    function startProgressAnimation() {
+        let currentProgress = 30;
+        const messages = [
+            {progress: 40, text: '📄 正在提取文本...', detail: '读取Word文档内容...'},
+            {progress: 50, text: '🤖 调用DeepSeek AI...', detail: '准备AI分析请求...'},
+            {progress: 60, text: '🤖 AI正在解析简历...', detail: '识别基本信息和工作经历...'},
+            {progress: 70, text: '🤖 AI深度分析...', detail: '提取技能和项目经验...'},
+            {progress: 80, text: '📊 正在计算评分...', detail: '多维度综合评估中...'},
+            {progress: 90, text: '🎯 正在匹配岗位...', detail: '智能推荐合适岗位...'},
+        ];
+
+        let messageIndex = 0;
+        progressInterval = setInterval(() => {
+            if (messageIndex < messages.length) {
+                const msg = messages[messageIndex];
+                updateProgress(msg.progress, msg.text, msg.detail);
+                console.log('进度更新:', msg.progress + '%', msg.text);
+                messageIndex++;
+            } else {
+                // 保持在90%，等待真正完成
+                clearInterval(progressInterval);
+            }
+        }, 2000); // 每2秒更新一次
+    }
+
+    // 停止进度动画
+    function stopProgressAnimation() {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+    }
+
+    // 请求完成
+    xhr.addEventListener('load', () => {
+        stopProgressAnimation(); // 停止进度动画
+
+        console.log('服务器响应:', xhr.status);
+        console.log('响应内容:', xhr.responseText.substring(0, 200));
+
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                console.log('解析JSON成功:', response);
+
+                if (response.success) {
+                    // 处理成功
+                    updateProgress(100, '✅ 解析完成！', `评分：${response.score}分`);
+                    console.log('处理完成，准备跳转到简历列表');
+
+                    setTimeout(() => {
+                        window.location.href = '/resumes/list/';
+                    }, 1500);
+                } else {
+                    // 服务器返回失败
+                    showError(response.error || '上传失败，请重试');
+                }
+            } catch (e) {
+                console.error('JSON解析失败:', e);
+                console.log('原始响应:', xhr.responseText);
+                showError('服务器响应格式错误');
+            }
+        } else {
+            console.error('服务器返回错误:', xhr.status, xhr.responseText);
+            showError('上传失败 (错误码: ' + xhr.status + ')，请重试');
+        }
+    });
+
+    // 错误处理
+    xhr.addEventListener('error', (e) => {
+        stopProgressAnimation(); // 停止进度动画
+        console.error('网络错误:', e);
+        showError('网络错误，请检查连接后重试');
+    });
+
+    // 超时处理
+    xhr.addEventListener('timeout', () => {
+        stopProgressAnimation(); // 停止进度动画
+        console.error('请求超时');
+        showError('请求超时（>2分钟），文件可能过大');
+    });
+
+    // 配置并发送请求
+    const uploadUrl = window.location.pathname; // 当前页面URL
+    console.log('发送POST请求到:', uploadUrl);
+
+    xhr.open('POST', uploadUrl, true);
+    xhr.timeout = 120000; // 2分钟超时
+
+    // 设置Ajax标识头
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    // 不要设置Content-Type，让浏览器自动设置（multipart/form-data）
+    xhr.send(formData);
+
+    console.log('请求已发送，等待服务器处理...');
+    return false;
+}
+
+function updateProgress(percent, text, detail) {
+    document.getElementById('progress-bar').style.width = percent + '%';
+    document.getElementById('progress-text').textContent = text;
+    document.getElementById('progress-detail').textContent = detail;
+}
+
+function showError(message) {
+    const progressArea = document.getElementById('progress-area');
+    progressArea.innerHTML = `
+        <div style="background: #ff4d4f; padding: 20px; border-radius: 12px; color: white; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 12px;">❌</div>
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">${message}</div>
+            <button onclick="location.reload()" class="btn-modern btn-modern-secondary" style="margin-top: 16px; background: white; color: #ff4d4f;">
+                重新上传
+            </button>
+        </div>
+    `;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+// 拖拽上传功能
+const uploadArea = document.getElementById('upload-area');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragging');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragging');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragging');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const input = document.getElementById('resume_file');
+        input.files = files;
+        updateFileName();
+    }
+});
+</script>
+{% endblock %}
+

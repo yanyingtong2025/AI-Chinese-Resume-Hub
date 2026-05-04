@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}编辑岗位{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 class="card-title">编辑岗位</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="title">岗位名称 *</label>
+                <input type="text" id="title" name="title" class="form-control" value="{{ job.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="company">公司名称 *</label>
+                <input type="text" id="company" name="company" class="form-control" value="{{ job.company }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="department">部门</label>
+                <input type="text" id="department" name="department" class="form-control" value="{{ job.department }}">
+            </div>
+
+            <div class="form-group">
+                <label for="location">工作地点 *</label>
+                <input type="text" id="location" name="location" class="form-control" value="{{ job.location }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="education_required">学历要求 *</label>
+                <select id="education_required" name="education_required" class="form-control" required>
+                    <option value="不限" {% if job.education_required == '不限' %}selected{% endif %}>不限</option>
+                    <option value="大专" {% if job.education_required == '大专' %}selected{% endif %}>大专</option>
+                    <option value="本科" {% if job.education_required == '本科' %}selected{% endif %}>本科</option>
+                    <option value="硕士" {% if job.education_required == '硕士' %}selected{% endif %}>硕士</option>
+                    <option value="博士" {% if job.education_required == '博士' %}selected{% endif %}>博士</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="work_years_required">工作年限要求（年）*</label>
+                <input type="number" id="work_years_required" name="work_years_required" class="form-control" value="{{ job.work_years_required }}" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label>薪资范围（k/月）</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" name="salary_min" class="form-control" placeholder="最低" value="{{ job.salary_min }}" min="0">
+                    <span>-</span>
+                    <input type="number" name="salary_max" class="form-control" placeholder="最高" value="{{ job.salary_max }}" min="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="skills_required">技能要求（用逗号分隔）*</label>
+            <input type="text" id="skills_required" name="skills_required" class="form-control" value="{{ job.skills_required }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="job_description">岗位描述 *</label>
+            <textarea id="job_description" name="job_description" class="form-control" rows="5" required>{{ job.job_description }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="job_requirements">任职要求 *</label>
+            <textarea id="job_requirements" name="job_requirements" class="form-control" rows="5" required>{{ job.job_requirements }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_active" {% if job.is_active %}checked{% endif %}>
+                启用该岗位
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary">保存修改</button>
+            <a href="{% url 'job_detail' job.id %}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

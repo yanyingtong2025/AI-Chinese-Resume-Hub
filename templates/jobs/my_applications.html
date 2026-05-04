@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}我的投递记录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 class="card-title">我的投递记录</h1>
+
+    {% if applications %}
+    <div style="display: grid; gap: 20px;">
+        {% for app in applications %}
+        <div style="border: 1px solid #d0d7de; border-radius: 6px; padding: 20px; background: #ffffff; transition: box-shadow 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
+                        <a href="{% url 'job_detail' app.job.id %}" style="color: #0969da; text-decoration: none;">
+                            {{ app.job.title }}
+                        </a>
+                    </h3>
+                    <div style="color: #57606a; font-size: 14px; margin-bottom: 4px;">
+                        📍 {{ app.job.location }} | 💰
+                        {% if app.job.salary_min and app.job.salary_max %}
+                            {{ app.job.salary_min }}-{{ app.job.salary_max }}k/月
+                        {% else %}
+                            面议
+                        {% endif %}
+                    </div>
+                    <div style="color: #57606a; font-size: 14px;">
+                        投递简历：{{ app.resume.name|default:app.resume.file_name }}
+                    </div>
+                </div>
+                <div>
+                    {% if app.status == 'pending' %}
+                        <span class="badge badge-warning" style="background: #bf8700; padding: 6px 12px;">待查看</span>
+                    {% elif app.status == 'viewed' %}
+                        <span class="badge badge-info" style="background: #0969da; padding: 6px 12px;">已查看</span>
+                    {% elif app.status == 'interested' %}
+                        <span class="badge badge-success" style="background: #1a7f37; padding: 6px 12px;">感兴趣</span>
+                    {% elif app.status == 'interview' %}
+                        <span class="badge badge-success" style="background: #0969da; padding: 6px 12px;">邀请面试</span>
+                    {% elif app.status == 'rejected' %}
+                        <span class="badge badge-danger" style="background: #cf222e; padding: 6px 12px;">不合适</span>
+                    {% elif app.status == 'accepted' %}
+                        <span class="badge badge-success" style="background: #1a7f37; padding: 6px 12px;">已录用</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #d0d7de;">
+                <div style="color: #57606a; font-size: 13px;">
+                    投递时间：{{ app.created_at|date:"Y-m-d H:i" }}
+                    {% if app.viewed_at %}
+                    | 查看时间：{{ app.viewed_at|date:"Y-m-d H:i" }}
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'job_detail' app.job.id %}" class="btn btn-secondary" style="padding: 4px 12px; font-size: 13px;">查看岗位</a>
+                    <a href="{% url 'resume_detail' app.resume.id %}" class="btn btn-secondary" style="padding: 4px 12px; font-size: 13px;">查看简历</a>
+                </div>
+            </div>
+
+            {% if app.hr_notes %}
+            <div style="margin-top: 12px; padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #0969da;">
+                <div style="font-weight: 500; margin-bottom: 4px; color: #24292f; font-size: 13px;">HR反馈：</div>
+                <div style="color: #57606a; font-size: 13px;">{{ app.hr_notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 80px 0; color: #57606a;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+        <p style="font-size: 16px; margin-bottom: 20px;">还没有投递记录</p>
+        <a href="{% url 'job_list' %}" class="btn btn-primary">去投递简历</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

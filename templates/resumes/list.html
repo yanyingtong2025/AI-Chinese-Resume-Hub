@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}简历列表{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 class="card-title" style="margin-bottom: 0;">📄 简历列表</h1>
+        {% if user.user_type == 'jobseeker' %}
+        <a href="{% url 'upload_resume' %}" class="btn-modern btn-modern-primary btn-modern-lg">
+            ➕ 上传新简历
+        </a>
+        {% endif %}
+    </div>
+
+    {% if resumes %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>文件名</th>
+                <th>学历</th>
+                <th>工作年限</th>
+                <th>评分</th>
+                <th>状态</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resume in resumes %}
+            <tr {% if '优化版' in resume.file_name %}style="background: #f0f9ff;"{% endif %}>
+                <td>
+                    {{ resume.name|default:"未解析" }}
+                    {% if '优化版' in resume.file_name %}
+                    <span class="badge badge-info" style="margin-left: 8px; background: #1890ff;">✨ 优化版</span>
+                    {% endif %}
+                </td>
+                <td>{{ resume.file_name }}</td>
+                <td>{{ resume.education|default:"-" }}</td>
+                <td>{{ resume.work_years|default:"-" }}年</td>
+                <td>
+                    {% if resume.score %}
+                        {% if resume.score >= 85 %}
+                            <span class="score-badge score-excellent">{{ resume.score }}分</span>
+                        {% elif resume.score >= 70 %}
+                            <span class="score-badge score-good">{{ resume.score }}分</span>
+                        {% elif resume.score >= 60 %}
+                            <span class="score-badge score-fair">{{ resume.score }}分</span>
+                        {% else %}
+                            <span class="score-badge score-poor">{{ resume.score }}分</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if resume.status == 'parsed' %}
+                        <span class="badge badge-success">已解析</span>
+                    {% elif resume.status == 'pending' %}
+                        <span class="badge badge-warning">待解析</span>
+                    {% else %}
+                        <span class="badge badge-danger">解析失败</span>
+                    {% endif %}
+                </td>
+                <td>{{ resume.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a href="{% url 'resume_detail' resume.id %}" class="btn-modern btn-modern-info btn-modern-sm">👁️ 查看</a>
+                        {% if user.user_type == 'jobseeker' and resume.user == user %}
+                            <a href="{% url 'edit_resume' resume.id %}" class="btn-modern btn-modern-warning btn-modern-sm">✏️ 编辑</a>
+                            <form method="post" action="{% url 'delete_resume' resume.id %}" style="display: inline;" onsubmit="return confirm('确定要删除这份简历吗？此操作不可恢复！');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-modern btn-modern-danger btn-modern-sm">🗑️ 删除</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 60px 0; color: #999;">
+        <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
+        <p style="font-size: 18px;">暂无简历</p>
+        {% if user.user_type == 'jobseeker' %}
+        <a href="{% url 'upload_resume' %}" class="btn-modern btn-modern-primary btn-modern-lg" style="margin-top: 20px;">立即上传</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

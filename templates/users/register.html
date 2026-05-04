@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}注册 - 智能简历筛选系统{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 500px;
+        margin: 50px auto;
+    }
+
+    .register-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .register-title {
+        text-align: center;
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 30px;
+    }
+
+    .user-type-selector {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .user-type-option {
+        flex: 1;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .user-type-option:hover {
+        border-color: #3498db;
+    }
+
+    .user-type-option input[type="radio"] {
+        display: none;
+    }
+
+    .user-type-option input[type="radio"]:checked + label {
+        color: #3498db;
+    }
+
+    .user-type-option.selected {
+        border-color: #3498db;
+        background: #ebf5fb;
+    }
+
+    .user-type-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    #company-field {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <h2 class="register-title">用户注册</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>选择身份</label>
+                <div class="user-type-selector">
+                    <div class="user-type-option" onclick="selectUserType('jobseeker', this)">
+                        <div class="user-type-icon">👤</div>
+                        <input type="radio" name="user_type" value="jobseeker" id="jobseeker" checked>
+                        <label for="jobseeker">求职者</label>
+                    </div>
+                    <div class="user-type-option" onclick="selectUserType('hr', this)">
+                        <div class="user-type-icon">💼</div>
+                        <input type="radio" name="user_type" value="hr" id="hr">
+                        <label for="hr">HR</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="text" id="phone" name="phone" class="form-control">
+            </div>
+
+            <div class="form-group" id="company-field">
+                <label for="company">公司名称</label>
+                <input type="text" id="company" name="company" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password2">确认密码</label>
+                <input type="password" id="password2" name="password2" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">注册</button>
+        </form>
+
+        <div class="register-link" style="text-align: center; margin-top: 20px; color: #666;">
+            已有账号？<a href="{% url 'login' %}" style="color: #3498db; text-decoration: none; font-weight: 500;">立即登录</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectUserType(type, element) {
+    document.querySelectorAll('.user-type-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    document.getElementById(type).checked = true;
+
+    // 如果选择HR，显示公司字段
+    if (type === 'hr') {
+        document.getElementById('company-field').style.display = 'block';
+    } else {
+        document.getElementById('company-field').style.display = 'none';
+    }
+}
+
+// 页面加载时选中第一个
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.user-type-option').classList.add('selected');
+});
+</script>
+{% endblock %}
+

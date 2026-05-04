@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}匹配结果 - {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h1 class="card-title" style="margin-bottom: 8px;">{{ job.title }} - 匹配结果</h1>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; font-size: 12px; font-weight: 500;">
+                    <span style="margin-right: 4px;">🤖</span>
+                    DeepSeek AI 智能匹配
+                </span>
+                <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #f0f5ff; color: #1890ff; border-radius: 16px; font-size: 12px; border: 1px solid #d6e4ff;">
+                    <span style="margin-right: 4px;">✓</span>
+                    多维度深度分析
+                </span>
+            </div>
+        </div>
+        <a href="{% url 'job_detail' job.id %}" class="btn btn-secondary">返回岗位详情</a>
+    </div>
+
+    {% if statistics %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">📊 匹配统计</h3>
+
+        <div class="stats-grid">
+            <div class="stat-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="stat-number">{{ statistics.excellent_count }}</div>
+                <div class="stat-label">优秀 (80+)</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);">
+                <div class="stat-number">{{ statistics.good_count }}</div>
+                <div class="stat-label">良好 (60-80)</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <div class="stat-number">{{ statistics.fair_count }}</div>
+                <div class="stat-label">一般 (40-60)</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);">
+                <div class="stat-number">{{ statistics.poor_count }}</div>
+                <div class="stat-label">较差 (<40)</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <div id="score-chart" style="width: 100%; height: 300px;"></div>
+            </div>
+            <div>
+                <div id="education-chart" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 18px; margin-bottom: 16px; color: #1890ff; font-weight: 600;">🔍 筛选条件</h3>
+        <form method="get" style="display: flex; gap: 15px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>最低分数</label>
+                <input type="number" name="min_score" class="form-control" value="{{ min_score }}" min="0" max="100">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>学历</label>
+                <select name="education" class="form-control">
+                    <option value="">全部</option>
+                    <option value="博士">博士</option>
+                    <option value="硕士">硕士</option>
+                    <option value="本科">本科</option>
+                    <option value="大专">大专</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>最低工作年限</label>
+                <input type="number" name="min_work_years" class="form-control" min="0">
+            </div>
+            <button type="submit" class="btn btn-primary">筛选</button>
+        </form>
+    </div>
+
+    {% if results %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>排名</th>
+                <th>姓名</th>
+                <th>学历</th>
+                <th>毕业院校</th>
+                <th>工作年限</th>
+                <th>综合匹配度</th>
+                <th>学历匹配</th>
+                <th>经验匹配</th>
+                <th>技能匹配</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in results %}
+            <tr>
+                <td><strong>{{ forloop.counter }}</strong></td>
+                <td><strong>{{ match.resume.name }}</strong></td>
+                <td>{{ match.resume.education }}</td>
+                <td>{{ match.resume.school|default:"-" }}</td>
+                <td>{{ match.resume.work_years }}年</td>
+                <td>
+                    <div style="font-size: 20px; font-weight: bold; color: {% if match.match_score >= 80 %}#28a745{% elif match.match_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                        {{ match.match_score|floatformat:1 }}
+                    </div>
+                </td>
+                <td>{{ match.education_score|floatformat:0 }}</td>
+                <td>{{ match.experience_score|floatformat:0 }}</td>
+                <td>{{ match.skills_score|floatformat:0 }}</td>
+                <td>
+                    {% if match.status == 'pending' %}
+                        <span class="badge badge-warning">待处理</span>
+                    {% elif match.status == 'interested' %}
+                        <span class="badge badge-info">感兴趣</span>
+                    {% elif match.status == 'interview' %}
+                        <span class="badge badge-success">邀请面试</span>
+                    {% else %}
+                        <span class="badge badge-danger">不合适</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'match_detail' match.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">详情</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 60px 0; color: #999;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+        <p style="font-size: 18px;">暂无匹配结果</p>
+        <p>请先进行智能匹配</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if statistics %}
+<script>
+// 分数分布图
+var scoreChart = echarts.init(document.getElementById('score-chart'));
+var scoreOption = {
+    title: { text: '匹配分数分布', left: 'center' },
+    tooltip: { trigger: 'item' },
+    series: [{
+        type: 'pie',
+        radius: '60%',
+        data: [
+            { value: {{ statistics.excellent_count }}, name: '优秀(80+)', itemStyle: { color: '#28a745' } },
+            { value: {{ statistics.good_count }}, name: '良好(60-80)', itemStyle: { color: '#ffc107' } },
+            { value: {{ statistics.fair_count }}, name: '一般(40-60)', itemStyle: { color: '#17a2b8' } },
+            { value: {{ statistics.poor_count }}, name: '较差(<40)', itemStyle: { color: '#6c757d' } }
+        ],
+        emphasis: {
+            itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+        }
+    }]
+};
+scoreChart.setOption(scoreOption);
+
+// 学历分布图
+var educationChart = echarts.init(document.getElementById('education-chart'));
+var educationData = {{ statistics.education_distribution|safe }};
+var eduNames = Object.keys(educationData);
+var eduValues = Object.values(educationData);
+
+var educationOption = {
+    title: { text: '候选人学历分布', left: 'center' },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'category', data: eduNames },
+    yAxis: { type: 'value' },
+    series: [{
+        data: eduValues,
+        type: 'bar',
+        itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#1890ff' },
+                { offset: 1, color: '#096dd9' }
+            ])
+        }
+    }]
+};
+educationChart.setOption(educationOption);
+
+window.addEventListener('resize', function() {
+    scoreChart.resize();
+    educationChart.resize();
+});
+</script>
+{% endif %}
+{% endblock %}
+

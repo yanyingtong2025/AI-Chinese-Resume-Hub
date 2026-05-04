@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - 投递记录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 class="card-title" style="margin-bottom: 0;">{{ job.title }} - 投递记录</h1>
+        <a href="{% url 'job_detail' job.id %}" class="btn btn-secondary">返回岗位详情</a>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom: 24px;">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">总投递</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.pending }}</div>
+            <div class="stat-label">待查看</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.interested }}</div>
+            <div class="stat-label">感兴趣</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.interview }}</div>
+            <div class="stat-label">邀请面试</div>
+        </div>
+    </div>
+
+    {% if applications %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>求职者</th>
+                <th>简历</th>
+                <th>学历</th>
+                <th>工作年限</th>
+                <th>状态</th>
+                <th>投递时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td><strong>{{ app.jobseeker.username }}</strong></td>
+                <td>
+                    <a href="{% url 'resume_detail' app.resume.id %}" style="color: #0969da;">
+                        {{ app.resume.name|default:app.resume.file_name }}
+                    </a>
+                </td>
+                <td>{{ app.resume.education|default:"-" }}</td>
+                <td>{{ app.resume.work_years|default:"-" }}年</td>
+                <td>
+                    <select onchange="updateStatus({{ app.id }}, this.value)" class="form-control" style="padding: 4px 8px; font-size: 13px; width: auto;">
+                        <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>待查看</option>
+                        <option value="viewed" {% if app.status == 'viewed' %}selected{% endif %}>已查看</option>
+                        <option value="interested" {% if app.status == 'interested' %}selected{% endif %}>感兴趣</option>
+                        <option value="interview" {% if app.status == 'interview' %}selected{% endif %}>邀请面试</option>
+                        <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>不合适</option>
+                        <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>已录用</option>
+                    </select>
+                </td>
+                <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'resume_detail' app.resume.id %}" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">查看简历</a>
+                    <button onclick="showNotesModal({{ app.id }}, '{{ app.hr_notes|escapejs }}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">备注</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 80px 0; color: #57606a;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+        <p style="font-size: 16px;">暂无投递记录</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 备注弹窗 -->
+<div id="notes-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h2 style="margin-bottom: 20px; font-size: 18px;">添加备注</h2>
+        <textarea id="hr-notes-input" class="form-control" rows="5" style="width: 100%; margin-bottom: 20px;" placeholder="输入备注内容..."></textarea>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeNotesModal()" class="btn btn-secondary">取消</button>
+            <button onclick="saveNotes()" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAppId = null;
+
+function updateStatus(appId, status) {
+    fetch('{% url "update_application_status" 0 %}'.replace('0', appId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'status=' + status
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            location.reload();
+        } else {
+            alert('更新失败：' + (data.error || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('更新失败，请重试');
+        console.error('Error:', error);
+    });
+}
+
+function showNotesModal(appId, currentNotes) {
+    currentAppId = appId;
+    document.getElementById('hr-notes-input').value = currentNotes;
+    document.getElementById('notes-modal').style.display = 'flex';
+}
+
+function closeNotesModal() {
+    document.getElementById('notes-modal').style.display = 'none';
+    currentAppId = null;
+}
+
+function saveNotes() {
+    const notes = document.getElementById('hr-notes-input').value;
+
+    fetch('{% url "update_application_status" 0 %}'.replace('0', currentAppId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'hr_notes=' + encodeURIComponent(notes)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ 备注保存成功');
+            closeNotesModal();
+            location.reload();
+        } else {
+            alert('保存失败：' + (data.error || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('保存失败，请重试');
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}
+
+
