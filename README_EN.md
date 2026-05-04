@@ -359,19 +359,25 @@ Access the application:
 ## 📸 Project Showcase
 
 ### Architecture Design Diagram
-> **[TODO]** Add system architecture diagram (using PlantUML or Mermaid)
-> - Overall system workflow
-> - Module interactions
-> - AI scoring process
+```mermaid
+flowchart LR
+        A[Job Seeker Uploads Resume] --> B[DeepSeek Parsing]
+        B --> C[6-Dimensional Scoring]
+        C --> D[Job Matching]
+        D --> E[Recommended Jobs / Feedback Loop]
+        E --> A
+```
 
-### Feature Screenshots
-> **[TODO]** Add screenshots:
-> - 1. User login and registration page
-> - 2. Resume upload and intelligent parsing display
-> - 3. AI scoring with 6-dimensional breakdown
-> - 4. Optimization suggestions panel
-> - 5. Job recommendation page
-> - 6. Admin management dashboard
+### Demo Video
+
+<div align="center">
+
+<video controls width="900" poster="功能演示视频.mp4">
+    <source src="功能演示视频.mp4" type="video/mp4" />
+    Your browser does not support video playback. Please open [功能演示视频.mp4](功能演示视频.mp4) directly.
+</video>
+
+</div>
 
 ---
 
@@ -527,6 +533,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ⭐ If this project helps you, please give it a Star!
 
-Made with ❤️ by [Yingtong Yan]
+Made with ❤️ by Yingtong Yan
 
 </div>

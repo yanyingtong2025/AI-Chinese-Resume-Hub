@@ -358,19 +358,25 @@ python manage.py runserver 0.0.0.0:8000
 ## 📸 项目展示
 
 ### 架构设计图
-> **[TODO]** 待补充系统架构设计图 (可使用 PlantUML 或 Mermaid)
-> - 整体系统流程图
-> - 模块间交互关系
-> - AI 评分流程图
+```mermaid
+flowchart LR
+        A[求职者上传简历] --> B[DeepSeek 解析]
+        B --> C[6 维度评分]
+        C --> D[岗位匹配]
+        D --> E[推荐岗位 / 反馈优化]
+        E --> A
+```
 
-### 功能截图
-> **[TODO]** 待补充以下截图：
-> - 1. 用户登录注册界面
-> - 2. 简历上传与智能解析展示
-> - 3. AI 评分与 6 维度详细评分
-> - 4. 优化建议面板
-> - 5. 岗位匹配推荐页面
-> - 6. 投递管理后台
+### 功能演示视频
+
+<div align="center">
+
+<video controls width="900" poster="功能演示视频.mp4">
+        <source src="功能演示视频.mp4" type="video/mp4" />
+        您的浏览器不支持视频播放，请直接打开 [功能演示视频.mp4](功能演示视频.mp4)。
+</video>
+
+</div>
 
 ---
 
@@ -526,6 +532,6 @@ match_result = JobMatchService.match_resume_to_job(resume, job)
 
 ⭐ 如果这个项目对你有帮助，欢迎 Star！
 
-Made with ❤️ by [鄢应彤]
+Made with ❤️ by Yingtong Yan
 
 </div>
