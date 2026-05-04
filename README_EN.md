@@ -372,7 +372,7 @@ flowchart LR
 
 <div align="center">
 
-<video controls width="900" poster="功能演示视频.mp4">
+<video controls style="max-width: 100%; height: auto;" poster="功能演示视频.mp4">
     <source src="功能演示视频.mp4" type="video/mp4" />
     Your browser does not support video playback. Please open [功能演示视频.mp4](功能演示视频.mp4) directly.
 </video>
