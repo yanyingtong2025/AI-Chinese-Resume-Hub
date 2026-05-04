@@ -372,9 +372,7 @@ flowchart LR
 
 <div align="center">
 
-<video controls playsinline style="max-width: 100%; height: auto;" poster="https://raw.githubusercontent.com/yanyingtong2025/AI-Chinese-Resume-Hub/main/%E5%8A%9F%E8%83%BD%E6%BC%94%E7%A4%BA%E8%A7%86%E9%A2%91.mp4">
-    <source src="https://raw.githubusercontent.com/yanyingtong2025/AI-Chinese-Resume-Hub/main/%E5%8A%9F%E8%83%BD%E6%BC%94%E7%A4%BA%E8%A7%86%E9%A2%91.mp4" type="video/mp4" />
-</video>
+[![Demo Video Cover](assets/demo/video-cover.svg)](https://raw.githubusercontent.com/yanyingtong2025/AI-Chinese-Resume-Hub/main/%E5%8A%9F%E8%83%BD%E6%BC%94%E7%A4%BA%E8%A7%86%E9%A2%91.mp4)
 
 </div>
 
